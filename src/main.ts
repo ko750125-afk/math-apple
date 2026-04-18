@@ -6,6 +6,8 @@ import { Renderer } from './game/Renderer';
 import { GameAudio } from './game/Sound';
 
 const TIME_LIMIT_SEC = 120;
+const LS_AUDIO_VOL = 'mathApple_volume';
+const LS_AUDIO_MUTE = 'mathApple_muted';
 
 /** Lets preventDefault() block page scroll while dragging on canvas (mobile). */
 const canvasPointerOpts: AddEventListenerOptions = { passive: false };
@@ -18,6 +20,9 @@ const T = {
     `\uBAA8\uB4E0 \uC0AC\uACFC\uB97C \uC81C\uAC70\uD588\uC2B5\uB2C8\uB2E4! \uAC78\uB9B0 \uC2DC\uAC04: ${sec.toFixed(1)}\uCD08.`,
   overlayOk: '\uD655\uC778',
   ariaBoard: '\uAC8C\uC784 \uBCF4\uB4DC',
+  muteBtn: '\uC74C\uC18C\uAC70',
+  unmuteBtn: '\uC18C\uB9AC \uCF1C\uAE30',
+  volumeAria: '\uBCFC\uB968',
 } as const;
 
 /** Time-over copy by final score (high ??low). */
@@ -123,6 +128,8 @@ async function main(): Promise<void> {
   const overlayTitle = document.querySelector<HTMLHeadingElement>('#overlayTitle')!;
   const overlayMessage = document.querySelector<HTMLParagraphElement>('#overlayMessage')!;
   const overlayClose = document.querySelector<HTMLButtonElement>('#overlayClose')!;
+  const muteBtn = document.querySelector<HTMLButtonElement>('#muteBtn')!;
+  const volumeSlider = document.querySelector<HTMLInputElement>('#volumeSlider')!;
 
   restartBtn.textContent = T.restart;
   overlayClose.textContent = T.overlayOk;
@@ -138,6 +145,54 @@ async function main(): Promise<void> {
   const audio = new GameAudio();
   void audio.resume();
   window.addEventListener('pointerdown', () => void audio.resume(), { capture: true });
+
+  const audioWrap = document.querySelector<HTMLElement>('.audio-controls');
+  audioWrap?.setAttribute('aria-label', T.volumeAria);
+
+  function syncMuteButton(): void {
+    const m = audio.getMuted();
+    muteBtn.setAttribute('aria-pressed', m ? 'true' : 'false');
+    muteBtn.textContent = m ? T.unmuteBtn : T.muteBtn;
+  }
+
+  function loadAudioPrefs(): void {
+    const v = localStorage.getItem(LS_AUDIO_VOL);
+    if (v !== null) {
+      const n = parseFloat(v);
+      if (!Number.isNaN(n)) {
+        audio.setVolume(Math.max(0, Math.min(1, n)));
+        volumeSlider.value = String(Math.round(audio.getVolume() * 100));
+      }
+    } else {
+      audio.setVolume(Number(volumeSlider.value) / 100);
+    }
+    const m = localStorage.getItem(LS_AUDIO_MUTE);
+    if (m === '1') {
+      audio.setMuted(true);
+    }
+    syncMuteButton();
+  }
+
+  loadAudioPrefs();
+
+  muteBtn.addEventListener('click', () => {
+    void audio.resume();
+    audio.toggleMute();
+    localStorage.setItem(LS_AUDIO_MUTE, audio.getMuted() ? '1' : '0');
+    syncMuteButton();
+  });
+
+  volumeSlider.addEventListener('input', () => {
+    void audio.resume();
+    const v = Number(volumeSlider.value) / 100;
+    audio.setVolume(v);
+    localStorage.setItem(LS_AUDIO_VOL, String(v));
+    if (v > 0 && audio.getMuted()) {
+      audio.setMuted(false);
+      localStorage.setItem(LS_AUDIO_MUTE, '0');
+      syncMuteButton();
+    }
+  });
 
   const initialGrid = pickGridSize(window.innerWidth);
   let gridCols = initialGrid.cols;
@@ -211,6 +266,7 @@ async function main(): Promise<void> {
     ptrId = null;
     overlay.classList.add('hidden');
     updateHud();
+    audio.resetTickMelody();
     startTimer();
     layoutAndDraw();
   }
@@ -341,6 +397,7 @@ async function main(): Promise<void> {
   });
 
   updateHud();
+  audio.resetTickMelody();
   startTimer();
   requestAnimationFrame(() => layoutAndDraw());
 }

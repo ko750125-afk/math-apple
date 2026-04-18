@@ -47,6 +47,19 @@
           </div>
         </div>
         <div class="controls">
+          <div class="audio-controls" aria-label="Sound">
+            <button type="button" id="muteBtn" class="btn-audio-mute" aria-pressed="false"></button>
+            <input
+              type="range"
+              id="volumeSlider"
+              class="volume-slider"
+              min="0"
+              max="100"
+              value="65"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            />
+          </div>
           <button type="button" id="restartBtn" class="btn btn-restart"></button>
         </div>
       </header>

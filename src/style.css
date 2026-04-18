@@ -224,8 +224,53 @@ body {
 
 .controls {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 14px;
+  gap: 12px;
+}
+
+.audio-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 3px solid #7e57c2;
+  border-radius: 999px;
+  box-shadow: 0 2px 0 #4527a0;
+}
+
+.btn-audio-mute {
+  appearance: none;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 400;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, #e1bee7 0%, #ce93d8 100%);
+  color: #4a148c;
+  border: 2px solid #6a1b9a;
+  box-shadow: 0 2px 0 #4a148c;
+  white-space: nowrap;
+}
+
+.btn-audio-mute:hover {
+  filter: brightness(1.06);
+}
+
+.btn-audio-mute[aria-pressed='true'] {
+  background: linear-gradient(180deg, #cfd8dc 0%, #90a4ae 100%);
+  color: #263238;
+  border-color: #455a64;
+}
+
+.volume-slider {
+  width: min(120px, 28vw);
+  height: 8px;
+  accent-color: #7e57c2;
+  cursor: pointer;
 }
 
 .btn {
