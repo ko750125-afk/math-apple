@@ -14,7 +14,8 @@ const canvasPointerOpts: AddEventListenerOptions = { passive: false };
 
 const T = {
   title: '\uC218\uD559\uB450\uB1CC\uD14C\uC2A4\uD2B8',
-  restart: '\uB2E4\uC2DC \uD558\uAE30',
+  gameStart: '\uAC8C\uC784 \uC2DC\uC791',
+  gameStop: '\uAC8C\uC784 \uC911\uC9C0',
   overlayCleared: '\uC804\uCCB4 \uD074\uB9AC\uC5B4',
   msgCleared: (sec: number) =>
     `\uBAA8\uB4E0 \uC0AC\uACFC\uB97C \uC81C\uAC70\uD588\uC2B5\uB2C8\uB2E4! \uAC78\uB9B0 \uC2DC\uAC04: ${sec.toFixed(1)}\uCD08.`,
@@ -43,7 +44,7 @@ function timeUpGradeLine(score: number): string {
   return '\uCC98\uC74C\uC740 \uB2E4 \uADF8\uB798.. \uB2E4\uC2DC\uD55C\uBC88 \uB3C4\uC804\uD574\uBCF4\uC790!';
 }
 
-type Phase = 'playing' | 'over' | 'cleared';
+type Phase = 'idle' | 'playing' | 'over' | 'cleared';
 
 /** Touch / coarse pointer: no hover ??tap "게임방법" to toggle tooltip. */
 function setupTouchHowTo(): void {
@@ -122,7 +123,8 @@ async function main(): Promise<void> {
 
   const scoreNum = document.querySelector<HTMLSpanElement>('#scoreNum')!;
   const timeNum = document.querySelector<HTMLSpanElement>('#timeNum')!;
-  const restartBtn = document.querySelector<HTMLButtonElement>('#restartBtn')!;
+  const startBtn = document.querySelector<HTMLButtonElement>('#startBtn')!;
+  const stopBtn = document.querySelector<HTMLButtonElement>('#stopBtn')!;
   const canvas = document.querySelector<HTMLCanvasElement>('#gameCanvas')!;
   const overlay = document.querySelector<HTMLDivElement>('#overlay')!;
   const overlayTitle = document.querySelector<HTMLHeadingElement>('#overlayTitle')!;
@@ -131,7 +133,8 @@ async function main(): Promise<void> {
   const muteBtn = document.querySelector<HTMLButtonElement>('#muteBtn')!;
   const volumeSlider = document.querySelector<HTMLInputElement>('#volumeSlider')!;
 
-  restartBtn.textContent = T.restart;
+  startBtn.textContent = T.gameStart;
+  stopBtn.textContent = T.gameStop;
   overlayClose.textContent = T.overlayOk;
   canvas.setAttribute('aria-label', T.ariaBoard);
   setupTouchHowTo();
@@ -200,8 +203,8 @@ async function main(): Promise<void> {
   let board: Cell[][] = createBoard(gridCols, gridRows);
   let score = 0;
   let timeLeft = TIME_LIMIT_SEC;
-  let phase: Phase = 'playing';
-  let gameStartedAt = performance.now();
+  let phase: Phase = 'idle';
+  let gameStartedAt = 0;
   let timerId: ReturnType<typeof setInterval> | null = null;
 
   let drag = false;
@@ -226,6 +229,12 @@ async function main(): Promise<void> {
     }
   }
 
+  function syncPlayButtons(): void {
+    const playing = phase === 'playing';
+    startBtn.disabled = playing;
+    stopBtn.disabled = !playing;
+  }
+
   function startTimer(): void {
     stopTimer();
     timerId = setInterval(() => {
@@ -236,6 +245,7 @@ async function main(): Promise<void> {
         timeLeft = 0;
         phase = 'over';
         stopTimer();
+        syncPlayButtons();
         audio.playTimeUp();
         overlayTitle.textContent = '';
         overlayMessage.textContent = timeUpGradeLine(score);
@@ -251,7 +261,8 @@ async function main(): Promise<void> {
     timeNum.textContent = String(timeLeft);
   }
 
-  function newGame(): void {
+  /** New board and HUD; timer off until startGame(). */
+  function prepareFreshRound(): void {
     stopTimer();
     const { w: cw } = cssSize();
     const g = pickGridSize(cw > 2 ? cw : window.innerWidth);
@@ -260,14 +271,36 @@ async function main(): Promise<void> {
     board = createBoard(gridCols, gridRows);
     score = 0;
     timeLeft = TIME_LIMIT_SEC;
-    phase = 'playing';
-    gameStartedAt = performance.now();
+    phase = 'idle';
     drag = false;
     ptrId = null;
     overlay.classList.add('hidden');
     updateHud();
     audio.resetTickMelody();
+    syncPlayButtons();
+    layoutAndDraw();
+  }
+
+  function startGame(): void {
+    if (phase === 'playing') return;
+    void audio.resume();
+    phase = 'playing';
+    gameStartedAt = performance.now();
+    overlay.classList.add('hidden');
+    syncPlayButtons();
+    audio.resetTickMelody();
     startTimer();
+    layoutAndDraw();
+  }
+
+  function stopGame(): void {
+    if (phase !== 'playing') return;
+    void audio.resume();
+    stopTimer();
+    phase = 'idle';
+    drag = false;
+    ptrId = null;
+    syncPlayButtons();
     layoutAndDraw();
   }
 
@@ -351,6 +384,7 @@ async function main(): Promise<void> {
       if (isBoardClear(board)) {
         phase = 'cleared';
         stopTimer();
+        syncPlayButtons();
         const elapsedSec = (performance.now() - gameStartedAt) / 1000;
         overlayTitle.textContent = T.overlayCleared;
         overlayMessage.textContent = T.msgCleared(elapsedSec);
@@ -368,14 +402,20 @@ async function main(): Promise<void> {
   canvas.addEventListener('pointerup', endPointer, canvasPointerOpts);
   canvas.addEventListener('pointercancel', endPointer, canvasPointerOpts);
 
-  restartBtn.addEventListener('click', () => {
+  startBtn.addEventListener('click', () => {
     void audio.resume();
-    newGame();
+    prepareFreshRound();
+    startGame();
+  });
+  stopBtn.addEventListener('click', () => {
+    void audio.resume();
+    stopGame();
   });
   overlayClose.addEventListener('click', () => {
     overlay.classList.add('hidden');
     if (phase === 'over' || phase === 'cleared') {
-      newGame();
+      phase = 'idle';
+      syncPlayButtons();
     }
   });
 
@@ -391,14 +431,17 @@ async function main(): Promise<void> {
         board = createBoard(gridCols, gridRows);
         drag = false;
         ptrId = null;
+        if (phase === 'playing') {
+          stopTimer();
+          phase = 'idle';
+        }
+        syncPlayButtons();
       }
       layoutAndDraw();
     }, 150);
   });
 
-  updateHud();
-  audio.resetTickMelody();
-  startTimer();
+  prepareFreshRound();
   requestAnimationFrame(() => layoutAndDraw());
 }
 
