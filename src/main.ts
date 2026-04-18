@@ -209,23 +209,58 @@ async function main(): Promise<void> {
 
   let drag = false;
   let ptrId: number | null = null;
+  /** True from canvas touchstart until all touches end (finger may leave canvas while dragging). */
+  let canvasTouchSequence = false;
   let x0 = 0;
   let y0 = 0;
   let x1 = 0;
   let y1 = 0;
 
-  /** Block page scroll during drags (touchmove may fire before pointerdown sets `drag`). */
+  function touchTargetIsUiControl(target: EventTarget | null): boolean {
+    return (
+      target instanceof Element &&
+      Boolean(
+        target.closest(
+          'button, input, select, textarea, a, .audio-controls, .play-controls, .how-to-wrap'
+        )
+      )
+    );
+  }
+
+  function touchTargetIsOverlay(target: EventTarget | null): boolean {
+    return target instanceof Element && !overlay.classList.contains('hidden') && overlay.contains(target);
+  }
+
+  /** Block page scroll during board drags; allow HUD sliders/buttons. */
   document.addEventListener(
     'touchmove',
     (e) => {
-      if (drag) e.preventDefault();
+      if (touchTargetIsUiControl(e.target) || touchTargetIsOverlay(e.target)) return;
+      if (drag || canvasTouchSequence) e.preventDefault();
     },
     { passive: false, capture: true }
   );
 
-  /** iOS/Safari: cancel browser scrolling for touches on the board while a round is active. */
+  document.addEventListener(
+    'touchend',
+    (e) => {
+      if (e.touches.length === 0) canvasTouchSequence = false;
+    },
+    { capture: true }
+  );
+  document.addEventListener(
+    'touchcancel',
+    (e) => {
+      if (e.touches.length === 0) canvasTouchSequence = false;
+    },
+    { capture: true }
+  );
+
+  /** iOS/Safari: take over the gesture when the board is touched during play. */
   const blockBoardTouchScroll = (e: TouchEvent): void => {
-    if (phase === 'playing') e.preventDefault();
+    if (phase !== 'playing') return;
+    canvasTouchSequence = true;
+    e.preventDefault();
   };
   canvas.addEventListener('touchstart', blockBoardTouchScroll, canvasPointerOpts);
   canvas.addEventListener('touchmove', blockBoardTouchScroll, canvasPointerOpts);
@@ -241,6 +276,9 @@ async function main(): Promise<void> {
     const playing = phase === 'playing';
     startBtn.disabled = playing;
     stopBtn.disabled = !playing;
+    document.documentElement.classList.toggle('game-playing', playing);
+    document.body.classList.toggle('game-playing', playing);
+    if (!playing) canvasTouchSequence = false;
   }
 
   function startTimer(): void {
@@ -282,6 +320,7 @@ async function main(): Promise<void> {
     phase = 'idle';
     drag = false;
     ptrId = null;
+    canvasTouchSequence = false;
     overlay.classList.add('hidden');
     updateHud();
     audio.resetTickMelody();
@@ -439,6 +478,7 @@ async function main(): Promise<void> {
         board = createBoard(gridCols, gridRows);
         drag = false;
         ptrId = null;
+        canvasTouchSequence = false;
         if (phase === 'playing') {
           stopTimer();
           phase = 'idle';

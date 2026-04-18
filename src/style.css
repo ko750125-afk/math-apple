@@ -15,6 +15,21 @@ body {
   overscroll-behavior: none;
 }
 
+/* Strong scroll lock while a round is active (mobile drag vs browser pan). */
+html.game-playing,
+html.game-playing body {
+  overflow: hidden;
+  overscroll-behavior: none;
+  touch-action: none;
+}
+
+html.game-playing .audio-controls,
+html.game-playing .play-controls,
+html.game-playing .how-to-wrap,
+html.game-playing .page-head {
+  touch-action: manipulation;
+}
+
 .app {
   display: flex;
   flex-direction: column;
