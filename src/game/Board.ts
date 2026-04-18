@@ -1,12 +1,11 @@
 export const COLS = 17;
 export const ROWS = 10;
 
-/** Narrower screens use fewer cells so each apple stays large enough to tap. */
+/** Use full board on typical phones; only trim on very narrow widths so cells stay usable. */
 export function pickGridSize(cssWidth: number): { cols: number; rows: number } {
-  if (cssWidth >= 720) return { cols: 17, rows: 10 };
-  if (cssWidth >= 560) return { cols: 13, rows: 8 };
-  if (cssWidth >= 420) return { cols: 10, rows: 6 };
-  return { cols: 8, rows: 5 };
+  if (cssWidth >= 360) return { cols: COLS, rows: ROWS };
+  if (cssWidth >= 320) return { cols: 15, rows: 9 };
+  return { cols: 13, rows: 8 };
 }
 
 export type Cell = { value: number } | null;

@@ -214,13 +214,21 @@ async function main(): Promise<void> {
   let x1 = 0;
   let y1 = 0;
 
-  window.addEventListener(
+  /** Block page scroll during drags (touchmove may fire before pointerdown sets `drag`). */
+  document.addEventListener(
     'touchmove',
     (e) => {
       if (drag) e.preventDefault();
     },
-    { passive: false }
+    { passive: false, capture: true }
   );
+
+  /** iOS/Safari: cancel browser scrolling for touches on the board while a round is active. */
+  const blockBoardTouchScroll = (e: TouchEvent): void => {
+    if (phase === 'playing') e.preventDefault();
+  };
+  canvas.addEventListener('touchstart', blockBoardTouchScroll, canvasPointerOpts);
+  canvas.addEventListener('touchmove', blockBoardTouchScroll, canvasPointerOpts);
 
   function stopTimer(): void {
     if (timerId !== null) {
