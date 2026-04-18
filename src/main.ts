@@ -1,11 +1,14 @@
 import './style.css';
 import appleUrl from '../assets/apple-pixel.png';
-import { COLS, ROWS, createBoard, isBoardClear, removeCells, type Cell } from './game/Board';
+import { createBoard, isBoardClear, pickGridSize, removeCells, type Cell } from './game/Board';
 import { normalizeRect, rectsIntersect, cellRect, type Rect } from './game/geometry';
 import { Renderer } from './game/Renderer';
 import { GameAudio } from './game/Sound';
 
 const TIME_LIMIT_SEC = 120;
+
+/** Lets preventDefault() block page scroll while dragging on canvas (mobile). */
+const canvasPointerOpts: AddEventListenerOptions = { passive: false };
 
 const T = {
   title: '\uC218\uD559\uB450\uB1CC\uD14C\uC2A4\uD2B8',
@@ -17,7 +20,7 @@ const T = {
   ariaBoard: '\uAC8C\uC784 \uBCF4\uB4DC',
 } as const;
 
-/** Time-over copy by final score (high → low). */
+/** Time-over copy by final score (high ??low). */
 function timeUpGradeLine(score: number): string {
   if (score >= 100) return '\uC640\uC6B0! \uC218\uD559\uCC9C\uC7AC\uB124\uC694';
   if (score >= 90)
@@ -37,7 +40,7 @@ function timeUpGradeLine(score: number): string {
 
 type Phase = 'playing' | 'over' | 'cleared';
 
-/** Touch / coarse pointer: no hover — tap "게임방법" to toggle tooltip. */
+/** Touch / coarse pointer: no hover ??tap "게임방법" to toggle tooltip. */
 function setupTouchHowTo(): void {
   const wrap = document.querySelector<HTMLElement>('.how-to-wrap');
   const trigger = document.querySelector<HTMLElement>('.how-to-trigger');
@@ -136,7 +139,10 @@ async function main(): Promise<void> {
   void audio.resume();
   window.addEventListener('pointerdown', () => void audio.resume(), { capture: true });
 
-  let board: Cell[][] = createBoard(COLS, ROWS);
+  const initialGrid = pickGridSize(window.innerWidth);
+  let gridCols = initialGrid.cols;
+  let gridRows = initialGrid.rows;
+  let board: Cell[][] = createBoard(gridCols, gridRows);
   let score = 0;
   let timeLeft = TIME_LIMIT_SEC;
   let phase: Phase = 'playing';
@@ -149,6 +155,14 @@ async function main(): Promise<void> {
   let y0 = 0;
   let x1 = 0;
   let y1 = 0;
+
+  window.addEventListener(
+    'touchmove',
+    (e) => {
+      if (drag) e.preventDefault();
+    },
+    { passive: false }
+  );
 
   function stopTimer(): void {
     if (timerId !== null) {
@@ -184,7 +198,11 @@ async function main(): Promise<void> {
 
   function newGame(): void {
     stopTimer();
-    board = createBoard(COLS, ROWS);
+    const { w: cw } = cssSize();
+    const g = pickGridSize(cw > 2 ? cw : window.innerWidth);
+    gridCols = g.cols;
+    gridRows = g.rows;
+    board = createBoard(gridCols, gridRows);
     score = 0;
     timeLeft = TIME_LIMIT_SEC;
     phase = 'playing';
@@ -211,7 +229,7 @@ async function main(): Promise<void> {
     canvas.height = Math.max(1, Math.floor(cssH * dpr));
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-    const layout = renderer.getLayout(cssW, cssH, COLS, ROWS);
+    const layout = renderer.getLayout(cssW, cssH, gridCols, gridRows);
     renderer.clear(cssW, cssH);
     renderer.drawGrid(board, layout);
 
@@ -229,34 +247,42 @@ async function main(): Promise<void> {
     return { x: clientX - r.left, y: clientY - r.top };
   }
 
-  canvas.addEventListener('pointerdown', (e) => {
-    if (phase !== 'playing') return;
-    void audio.resume();
-    e.preventDefault();
-    canvas.setPointerCapture(e.pointerId);
-    ptrId = e.pointerId;
-    drag = true;
-    const p = canvasPoint(e.clientX, e.clientY);
-    x0 = x1 = p.x;
-    y0 = y1 = p.y;
-    layoutAndDraw();
-  });
+  canvas.addEventListener(
+    'pointerdown',
+    (e) => {
+      if (phase !== 'playing') return;
+      void audio.resume();
+      e.preventDefault();
+      canvas.setPointerCapture(e.pointerId);
+      ptrId = e.pointerId;
+      drag = true;
+      const p = canvasPoint(e.clientX, e.clientY);
+      x0 = x1 = p.x;
+      y0 = y1 = p.y;
+      layoutAndDraw();
+    },
+    canvasPointerOpts
+  );
 
-  canvas.addEventListener('pointermove', (e) => {
-    if (!drag || ptrId !== e.pointerId) return;
-    e.preventDefault();
-    const p = canvasPoint(e.clientX, e.clientY);
-    x1 = p.x;
-    y1 = p.y;
-    layoutAndDraw();
-  });
+  canvas.addEventListener(
+    'pointermove',
+    (e) => {
+      if (!drag || ptrId !== e.pointerId) return;
+      e.preventDefault();
+      const p = canvasPoint(e.clientX, e.clientY);
+      x1 = p.x;
+      y1 = p.y;
+      layoutAndDraw();
+    },
+    canvasPointerOpts
+  );
 
   function endPointer(e: PointerEvent): void {
     if (!drag || ptrId !== e.pointerId) return;
     e.preventDefault();
     canvas.releasePointerCapture(e.pointerId);
     const { w: cssW, h: cssH } = cssSize();
-    const layout = renderer.getLayout(cssW, cssH, COLS, ROWS);
+    const layout = renderer.getLayout(cssW, cssH, gridCols, gridRows);
     const sel = normalizeRect(x0, y0, x1, y1);
     const picked = getCellsInSelection(board, sel, layout);
     const sum = sumSelected(board, picked);
@@ -283,8 +309,8 @@ async function main(): Promise<void> {
     layoutAndDraw();
   }
 
-  canvas.addEventListener('pointerup', endPointer);
-  canvas.addEventListener('pointercancel', endPointer);
+  canvas.addEventListener('pointerup', endPointer, canvasPointerOpts);
+  canvas.addEventListener('pointercancel', endPointer, canvasPointerOpts);
 
   restartBtn.addEventListener('click', () => {
     void audio.resume();
@@ -297,7 +323,22 @@ async function main(): Promise<void> {
     }
   });
 
-  window.addEventListener('resize', () => layoutAndDraw());
+  let resizeDebounce: ReturnType<typeof setTimeout> | null = null;
+  window.addEventListener('resize', () => {
+    if (resizeDebounce) clearTimeout(resizeDebounce);
+    resizeDebounce = setTimeout(() => {
+      const { w: cw } = cssSize();
+      const nw = pickGridSize(cw > 2 ? cw : window.innerWidth);
+      if (nw.cols !== gridCols || nw.rows !== gridRows) {
+        gridCols = nw.cols;
+        gridRows = nw.rows;
+        board = createBoard(gridCols, gridRows);
+        drag = false;
+        ptrId = null;
+      }
+      layoutAndDraw();
+    }, 150);
+  });
 
   updateHud();
   startTimer();

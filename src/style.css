@@ -12,7 +12,7 @@ body {
   color: #2d1b4e;
   background: linear-gradient(165deg, #7ec8ff 0%, #b388ff 35%, #ff8cc8 70%, #ffe066 100%);
   background-attachment: fixed;
-  overscroll-behavior-y: none;
+  overscroll-behavior: none;
 }
 
 .app {
@@ -286,6 +286,9 @@ body {
   justify-content: center;
   align-items: stretch;
   min-height: 420px;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 #gameCanvas {
@@ -299,6 +302,7 @@ body {
     0 6px 0 #7e57c2,
     0 16px 40px rgba(0, 0, 0, 0.25);
   touch-action: none;
+  -webkit-touch-callout: none;
   display: block;
   background: #1a1f2e;
 }

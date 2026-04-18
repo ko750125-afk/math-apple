@@ -1,6 +1,14 @@
 export const COLS = 17;
 export const ROWS = 10;
 
+/** Narrower screens use fewer cells so each apple stays large enough to tap. */
+export function pickGridSize(cssWidth: number): { cols: number; rows: number } {
+  if (cssWidth >= 720) return { cols: 17, rows: 10 };
+  if (cssWidth >= 560) return { cols: 13, rows: 8 };
+  if (cssWidth >= 420) return { cols: 10, rows: 6 };
+  return { cols: 8, rows: 5 };
+}
+
 export type Cell = { value: number } | null;
 
 export function createBoard(cols: number, rows: number): Cell[][] {
