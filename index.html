@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>&#xC218;&#xD559;&#xB450;&#xB1CC;&#xD14C;&#xC2A4;&#xD2B8;</title>
+  </head>
+  <body>
+    <div id="app" class="app">
+      <div class="page-head">
+        <h1 class="app-title">&#xC218;&#xD559;&#xB450;&#xB1CC;&#xD14C;&#xC2A4;&#xD2B8;</h1>
+        <p class="app-tagline">&#xC5BC;&#xB9C8;&#xB098; &#xC88B;&#xC740; &#xB450;&#xB1CC;&#xB97C; &#xAC00;&#xC9C0;&#xACE0; &#xC788;&#xB294;&#xC9C0; &#xD14C;&#xC2A4;&#xD2B8;&#xD569;&#xB2C8;&#xB2E4;.</p>
+        <div class="how-to-wrap">
+          <span class="how-to-trigger" tabindex="0">&#xAC8C;&#xC784;&#xBC29;&#xBC95;</span>
+          <div class="how-to-tooltip" id="howToTooltip" role="tooltip">
+            <p>&#xB9C8;&#xC6B0;&#xC2A4;&#xB85C; &#xB4DC;&#xB798;&#xADF8;&#xD574;&#xC11C; 10&#xC744; &#xB9CC;&#xB4E4;&#xBA74; &#xC810;&#xC218;&#xB97C; &#xCDE8;&#xB4DD;&#xD569;&#xB2C8;&#xB2E4;.</p>
+            <ul class="how-to-rules">
+              <li>&#xC0AC;&#xACFC; 2&#xAC1C;&#xB85C; 10&#xC744; &#xB9CC;&#xB4E4;&#xBA74; 5&#xC810;</li>
+              <li>&#xC0AC;&#xACFC; 3&#xAC1C;&#xB85C; 10&#xC744; &#xB9CC;&#xB4E4;&#xBA74; 10&#xC810;</li>
+              <li>&#xC0AC;&#xACFC; 4&#xAC1C;&#xB85C; 10&#xC744; &#xB9CC;&#xB4E4;&#xBA74; 20&#xC810;</li>
+              <li>&#xC0AC;&#xACFC; 5&#xAC1C;&#xC774;&#xC0C1;&#xC73C;&#xB85C; 10&#xC744; &#xB9CC;&#xB4E4;&#xBA74; 50&#xC810;</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <header class="header">
+        <div class="hud">
+          <span id="scoreLabel"></span>
+          <span id="timerLabel"></span>
+        </div>
+        <div class="controls">
+          <label class="pale-label">
+            <input type="checkbox" id="paleMode" />
+            <span id="paleModeLabel"></span>
+          </label>
+          <button type="button" id="restartBtn" class="btn"></button>
+        </div>
+      </header>
+      <div class="canvas-wrap">
+        <canvas id="gameCanvas" aria-label="Game board"></canvas>
+      </div>
+      <div id="overlay" class="overlay hidden" role="dialog" aria-modal="true">
+        <div class="overlay-card">
+          <h2 id="overlayTitle"></h2>
+          <p id="overlayMessage"></p>
+          <button type="button" id="overlayClose" class="btn"></button>
+        </div>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
