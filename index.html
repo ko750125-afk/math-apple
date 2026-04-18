@@ -2,8 +2,19 @@
 <html lang="ko">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#7ec8ff" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
     <title>&#xC218;&#xD559;&#xB450;&#xB1CC;&#xD14C;&#xC2A4;&#xD2B8;</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Jua&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
     <div id="app" class="app">
@@ -13,7 +24,7 @@
         <div class="how-to-wrap">
           <span class="how-to-trigger" tabindex="0">&#xAC8C;&#xC784;&#xBC29;&#xBC95;</span>
           <div class="how-to-tooltip" id="howToTooltip" role="tooltip">
-            <p>&#xB9C8;&#xC6B0;&#xC2A4;&#xB85C; &#xB4DC;&#xB798;&#xADF8;&#xD574;&#xC11C; 10&#xC744; &#xB9CC;&#xB4E4;&#xBA74; &#xC810;&#xC218;&#xB97C; &#xCDE8;&#xB4DD;&#xD569;&#xB2C8;&#xB2E4;.</p>
+            <p>&#xB9C8;&#xC6B0;&#xC2A4;&#xB098; &#xC190;&#xAC00;&#xB77D;&#xC73C;&#xB85C; &#xB4DC;&#xB798;&#xADF8;&#xD574;&#xC11C; 10&#xC744; &#xB9CC;&#xB4E4;&#xBA74; &#xC810;&#xC218;&#xB97C; &#xCDE8;&#xB4DD;&#xD569;&#xB2C8;&#xB2E4;.</p>
             <ul class="how-to-rules">
               <li>&#xC0AC;&#xACFC; 2&#xAC1C;&#xB85C; 10&#xC744; &#xB9CC;&#xB4E4;&#xBA74; 5&#xC810;</li>
               <li>&#xC0AC;&#xACFC; 3&#xAC1C;&#xB85C; 10&#xC744; &#xB9CC;&#xB4E4;&#xBA74; 10&#xC810;</li>
@@ -24,16 +35,19 @@
         </div>
       </div>
       <header class="header">
-        <div class="hud">
-          <span id="scoreLabel"></span>
-          <span id="timerLabel"></span>
+        <div class="hud" aria-live="polite">
+          <div class="hud-chip hud-score">
+            <span class="chip-caption">&#xC810;&#xC218;</span>
+            <span id="scoreNum" class="chip-value">0</span>
+          </div>
+          <div class="hud-chip hud-time">
+            <span class="chip-caption">&#xB0A8;&#xC740; &#xC2DC;&#xAC04;</span>
+            <span id="timeNum" class="chip-value">120</span>
+            <span class="chip-sec">&#xCD08;</span>
+          </div>
         </div>
         <div class="controls">
-          <label class="pale-label">
-            <input type="checkbox" id="paleMode" />
-            <span id="paleModeLabel"></span>
-          </label>
-          <button type="button" id="restartBtn" class="btn"></button>
+          <button type="button" id="restartBtn" class="btn btn-restart"></button>
         </div>
       </header>
       <div class="canvas-wrap">
@@ -43,7 +57,7 @@
         <div class="overlay-card">
           <h2 id="overlayTitle"></h2>
           <p id="overlayMessage"></p>
-          <button type="button" id="overlayClose" class="btn"></button>
+          <button type="button" id="overlayClose" class="btn btn-overlay"></button>
         </div>
       </div>
     </div>

@@ -9,9 +9,6 @@ const TIME_LIMIT_SEC = 120;
 
 const T = {
   title: '\uC218\uD559\uB450\uB1CC\uD14C\uC2A4\uD2B8',
-  score: (n: number) => `\uC810\uC218: ${n}`,
-  time: (n: number) => `\uB0A8\uC740 \uC2DC\uAC04: ${n}`,
-  pale: '\uC5F0\uD55C \uC0C9',
   restart: '\uB2E4\uC2DC \uD558\uAE30',
   overlayCleared: '\uC804\uCCB4 \uD074\uB9AC\uC5B4',
   msgCleared: (sec: number) =>
@@ -39,6 +36,33 @@ function timeUpGradeLine(score: number): string {
 }
 
 type Phase = 'playing' | 'over' | 'cleared';
+
+/** Touch / coarse pointer: no hover — tap "게임방법" to toggle tooltip. */
+function setupTouchHowTo(): void {
+  const wrap = document.querySelector<HTMLElement>('.how-to-wrap');
+  const trigger = document.querySelector<HTMLElement>('.how-to-trigger');
+  if (!wrap || !trigger) return;
+  if (!window.matchMedia('(hover: none), (pointer: coarse)').matches) return;
+
+  trigger.setAttribute('role', 'button');
+  trigger.setAttribute('aria-expanded', 'false');
+
+  trigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const open = wrap.classList.toggle('is-open');
+    trigger.setAttribute('aria-expanded', String(open));
+  });
+
+  document.addEventListener(
+    'click',
+    (e) => {
+      if (wrap.contains(e.target as Node)) return;
+      wrap.classList.remove('is-open');
+      trigger.setAttribute('aria-expanded', 'false');
+    },
+    true
+  );
+}
 
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -88,10 +112,8 @@ function scoreForMatchAppleCount(count: number): number {
 async function main(): Promise<void> {
   document.title = T.title;
 
-  const scoreLabel = document.querySelector<HTMLSpanElement>('#scoreLabel')!;
-  const timerLabel = document.querySelector<HTMLSpanElement>('#timerLabel')!;
-  const paleModeEl = document.querySelector<HTMLInputElement>('#paleMode')!;
-  const paleModeLabel = document.querySelector<HTMLSpanElement>('#paleModeLabel')!;
+  const scoreNum = document.querySelector<HTMLSpanElement>('#scoreNum')!;
+  const timeNum = document.querySelector<HTMLSpanElement>('#timeNum')!;
   const restartBtn = document.querySelector<HTMLButtonElement>('#restartBtn')!;
   const canvas = document.querySelector<HTMLCanvasElement>('#gameCanvas')!;
   const overlay = document.querySelector<HTMLDivElement>('#overlay')!;
@@ -99,10 +121,10 @@ async function main(): Promise<void> {
   const overlayMessage = document.querySelector<HTMLParagraphElement>('#overlayMessage')!;
   const overlayClose = document.querySelector<HTMLButtonElement>('#overlayClose')!;
 
-  paleModeLabel.textContent = T.pale;
   restartBtn.textContent = T.restart;
   overlayClose.textContent = T.overlayOk;
   canvas.setAttribute('aria-label', T.ariaBoard);
+  setupTouchHowTo();
 
   const apple = await loadImage(appleUrl);
   const ctxRaw = canvas.getContext('2d');
@@ -140,7 +162,7 @@ async function main(): Promise<void> {
     timerId = setInterval(() => {
       if (phase !== 'playing') return;
       timeLeft -= 1;
-      timerLabel.textContent = T.time(timeLeft);
+      timeNum.textContent = String(timeLeft);
       if (timeLeft <= 0) {
         timeLeft = 0;
         phase = 'over';
@@ -156,8 +178,8 @@ async function main(): Promise<void> {
   }
 
   function updateHud(): void {
-    scoreLabel.textContent = T.score(score);
-    timerLabel.textContent = T.time(timeLeft);
+    scoreNum.textContent = String(score);
+    timeNum.textContent = String(timeLeft);
   }
 
   function newGame(): void {
@@ -191,14 +213,14 @@ async function main(): Promise<void> {
 
     const layout = renderer.getLayout(cssW, cssH, COLS, ROWS);
     renderer.clear(cssW, cssH);
-    renderer.drawGrid(board, layout, paleModeEl.checked);
+    renderer.drawGrid(board, layout);
 
     if (drag) {
       const sel = normalizeRect(x0, y0, x1, y1);
       const picked = getCellsInSelection(board, sel, layout);
       const valid = picked.length > 0 && sumSelected(board, picked) === 10;
-      renderer.drawSelection(sel, valid, paleModeEl.checked);
-      renderer.drawDragLine(x0, y0, x1, y1, valid, paleModeEl.checked);
+      renderer.drawSelection(sel, valid);
+      renderer.drawDragLine(x0, y0, x1, y1, valid);
     }
   }
 
@@ -264,7 +286,6 @@ async function main(): Promise<void> {
   canvas.addEventListener('pointerup', endPointer);
   canvas.addEventListener('pointercancel', endPointer);
 
-  paleModeEl.addEventListener('change', () => layoutAndDraw());
   restartBtn.addEventListener('click', () => {
     void audio.resume();
     newGame();

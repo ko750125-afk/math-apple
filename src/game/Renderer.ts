@@ -29,9 +29,8 @@ export class Renderer {
     ctx.fillRect(0, 0, cssWidth, cssHeight);
   }
 
-  drawGrid(board: Cell[][], layout: Layout, paleMode: boolean): void {
+  drawGrid(board: Cell[][], layout: Layout): void {
     const { ctx } = this;
-    const alpha = paleMode ? 0.55 : 1;
 
     for (let r = 0; r < layout.rows; r++) {
       for (let c = 0; c < layout.cols; c++) {
@@ -44,7 +43,6 @@ export class Renderer {
         const innerH = rect.bottom - rect.top - pad * 2;
 
         ctx.save();
-        ctx.globalAlpha = alpha;
 
         if (this.apple.complete && this.apple.naturalWidth > 0) {
           ctx.imageSmoothingEnabled = false;
@@ -54,8 +52,7 @@ export class Renderer {
           ctx.fillRect(rect.left + pad, rect.top + pad, innerW, innerH);
         }
 
-        ctx.globalAlpha = 1;
-        ctx.fillStyle = paleMode ? 'rgba(255,255,255,0.92)' : '#fff';
+        ctx.fillStyle = '#fff';
         ctx.strokeStyle = 'rgba(0,0,0,0.65)';
         ctx.lineWidth = Math.max(2, layout.cellSize * 0.08);
         ctx.font = `bold ${Math.floor(layout.cellSize * 0.42)}px system-ui, "Segoe UI", sans-serif`;
@@ -70,7 +67,7 @@ export class Renderer {
     }
   }
 
-  drawSelection(sel: Rect | null, valid: boolean, paleMode: boolean): void {
+  drawSelection(sel: Rect | null, valid: boolean): void {
     if (!sel) return;
     const { ctx } = this;
     const w = sel.right - sel.left;
@@ -78,13 +75,7 @@ export class Renderer {
     if (w < 2 || h < 2) return;
 
     ctx.save();
-    ctx.fillStyle = valid
-      ? paleMode
-        ? 'rgba(239, 83, 80, 0.22)'
-        : 'rgba(229, 57, 53, 0.28)'
-      : paleMode
-        ? 'rgba(255, 255, 255, 0.12)'
-        : 'rgba(255, 255, 255, 0.18)';
+    ctx.fillStyle = valid ? 'rgba(229, 57, 53, 0.28)' : 'rgba(255, 255, 255, 0.18)';
     ctx.fillRect(sel.left, sel.top, w, h);
     ctx.strokeStyle = valid ? '#e53935' : 'rgba(255,255,255,0.45)';
     ctx.lineWidth = 2;
@@ -94,27 +85,14 @@ export class Renderer {
   }
 
   /** Diagonal drag guide from pointer down to current position (drawn on top of the selection box). */
-  drawDragLine(
-    x0: number,
-    y0: number,
-    x1: number,
-    y1: number,
-    valid: boolean,
-    paleMode: boolean
-  ): void {
+  drawDragLine(x0: number, y0: number, x1: number, y1: number, valid: boolean): void {
     const dx = x1 - x0;
     const dy = y1 - y0;
     if (dx * dx + dy * dy < 9) return;
 
     const { ctx } = this;
-    const glow = valid
-      ? paleMode
-        ? 'rgba(255, 213, 79, 0.95)'
-        : 'rgba(255, 235, 59, 1)'
-      : paleMode
-        ? 'rgba(187, 222, 251, 0.95)'
-        : 'rgba(255, 255, 255, 0.95)';
-    const core = valid ? (paleMode ? '#e65100' : '#b71c1c') : paleMode ? '#546e7a' : '#37474f';
+    const glow = valid ? 'rgba(255, 235, 59, 1)' : 'rgba(255, 255, 255, 0.95)';
+    const core = valid ? '#b71c1c' : '#37474f';
 
     ctx.save();
     ctx.lineCap = 'round';
@@ -123,7 +101,7 @@ export class Renderer {
     ctx.strokeStyle = glow;
     ctx.lineWidth = 10;
     ctx.shadowColor = valid ? '#ffeb3b' : '#e3f2fd';
-    ctx.shadowBlur = paleMode ? 10 : 16;
+    ctx.shadowBlur = 16;
     ctx.beginPath();
     ctx.moveTo(x0, y0);
     ctx.lineTo(x1, y1);
