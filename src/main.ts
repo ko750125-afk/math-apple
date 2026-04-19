@@ -96,8 +96,6 @@ async function main(): Promise<void> {
 
   const scoreNum = document.querySelector<HTMLSpanElement>('#scoreNum')!;
   const timeNum = document.querySelector<HTMLSpanElement>('#timeNum')!;
-  const startBtn = document.querySelector<HTMLButtonElement>('#startBtn')!;
-  const stopBtn = document.querySelector<HTMLButtonElement>('#stopBtn')!;
   const canvas = document.querySelector<HTMLCanvasElement>('#gameCanvas')!;
   canvas.draggable = false;
   const canvasWrap = canvas.parentElement as HTMLElement;
@@ -108,8 +106,6 @@ async function main(): Promise<void> {
   const muteBtn = document.querySelector<HTMLButtonElement>('#muteBtn')!;
   const volumeSlider = document.querySelector<HTMLInputElement>('#volumeSlider')!;
 
-  startBtn.textContent = T.gameStart;
-  stopBtn.textContent = T.gameStop;
   overlayClose.textContent = T.overlayOk;
   canvas.setAttribute('aria-label', T.ariaBoard);
 
@@ -279,8 +275,6 @@ async function main(): Promise<void> {
 
   function syncPlayButtons(): void {
     const playing = phase === 'playing';
-    startBtn.disabled = playing;
-    stopBtn.disabled = !playing;
     document.documentElement.classList.toggle('game-playing', playing);
     document.body.classList.toggle('game-playing', playing);
     if (!playing) canvasTouchSequence = false;
@@ -342,17 +336,6 @@ async function main(): Promise<void> {
     syncPlayButtons();
     audio.resetTickMelody();
     startTimer();
-    layoutAndDraw();
-  }
-
-  function stopGame(): void {
-    if (phase !== 'playing') return;
-    void audio.resume();
-    stopTimer();
-    phase = 'idle';
-    drag = false;
-    ptrId = null;
-    syncPlayButtons();
     layoutAndDraw();
   }
 
@@ -473,20 +456,11 @@ async function main(): Promise<void> {
   document.addEventListener('pointerup', endPointer, canvasPointerOpts);
   document.addEventListener('pointercancel', endPointer, canvasPointerOpts);
 
-  startBtn.addEventListener('click', () => {
-    void audio.resume();
-    prepareFreshRound();
-    startGame();
-  });
-  stopBtn.addEventListener('click', () => {
-    void audio.resume();
-    stopGame();
-  });
   overlayClose.addEventListener('click', () => {
     overlay.classList.add('hidden');
     if (phase === 'over' || phase === 'cleared') {
-      phase = 'idle';
-      syncPlayButtons();
+      prepareFreshRound();
+      startGame();
     }
   });
 
@@ -514,7 +488,10 @@ async function main(): Promise<void> {
   });
 
   prepareFreshRound();
-  requestAnimationFrame(() => layoutAndDraw());
+  requestAnimationFrame(() => {
+    layoutAndDraw();
+    startGame();
+  });
 }
 
 main().catch((err) => {
