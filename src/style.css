@@ -23,6 +23,22 @@ html.game-playing body {
   touch-action: none;
 }
 
+html.drag-active,
+html.drag-active body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+body.drag-active {
+  position: fixed;
+  left: 0;
+  right: 0;
+  width: 100%;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: crosshair;
+}
+
 html.game-playing .audio-controls,
 html.game-playing .play-controls,
 html.game-playing .how-to-wrap,
