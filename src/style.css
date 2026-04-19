@@ -15,6 +15,11 @@ body {
   overscroll-behavior: none;
 }
 
+/* Reserve scrollbar space so toggling overflow during play doesn't shift layout. */
+html {
+  scrollbar-gutter: stable;
+}
+
 /* Strong scroll lock while a round is active (mobile drag vs browser pan). */
 html.game-playing,
 html.game-playing body {
