@@ -185,7 +185,6 @@ async function main(): Promise<void> {
   let ptrId: number | null = null;
   /** True from canvas touchstart until all touches end (finger may leave canvas while dragging). */
   let canvasTouchSequence = false;
-  let dragScrollLockY = 0;
   let x0 = 0;
   let y0 = 0;
   let x1 = 0;
@@ -255,35 +254,6 @@ async function main(): Promise<void> {
     { passive: false, capture: true }
   );
 
-  window.addEventListener(
-    'scroll',
-    () => {
-      if (drag) window.scrollTo(0, dragScrollLockY);
-    },
-    { passive: true }
-  );
-
-  document.addEventListener(
-    'mousemove',
-    (e) => {
-      if (!drag) return;
-      e.preventDefault();
-      window.scrollTo(0, dragScrollLockY);
-      document.getSelection()?.removeAllRanges();
-    },
-    { capture: true }
-  );
-
-  document.addEventListener(
-    'mouseup',
-    () => {
-      if (!drag) return;
-      window.scrollTo(0, dragScrollLockY);
-      document.getSelection()?.removeAllRanges();
-    },
-    { capture: true }
-  );
-
   document.addEventListener(
     'selectstart',
     (e) => {
@@ -294,14 +264,6 @@ async function main(): Promise<void> {
 
   document.addEventListener(
     'dragstart',
-    (e) => {
-      if (drag) e.preventDefault();
-    },
-    { capture: true }
-  );
-
-  document.addEventListener(
-    'contextmenu',
     (e) => {
       if (drag) e.preventDefault();
     },
@@ -322,21 +284,6 @@ async function main(): Promise<void> {
     document.documentElement.classList.toggle('game-playing', playing);
     document.body.classList.toggle('game-playing', playing);
     if (!playing) canvasTouchSequence = false;
-  }
-
-  function setDragScrollLock(active: boolean): void {
-    if (active) {
-      dragScrollLockY = window.scrollY;
-      document.documentElement.classList.add('drag-active');
-      document.body.classList.add('drag-active');
-      document.body.style.top = `-${dragScrollLockY}px`;
-      return;
-    }
-
-    document.documentElement.classList.remove('drag-active');
-    document.body.classList.remove('drag-active');
-    document.body.style.top = '';
-    window.scrollTo(0, dragScrollLockY);
   }
 
   function startTimer(): void {
@@ -379,7 +326,6 @@ async function main(): Promise<void> {
     drag = false;
     ptrId = null;
     canvasTouchSequence = false;
-    setDragScrollLock(false);
     overlay.classList.add('hidden');
     updateHud();
     audio.resetTickMelody();
@@ -406,7 +352,6 @@ async function main(): Promise<void> {
     phase = 'idle';
     drag = false;
     ptrId = null;
-    setDragScrollLock(false);
     syncPlayButtons();
     layoutAndDraw();
   }
@@ -456,7 +401,6 @@ async function main(): Promise<void> {
       }
       ptrId = e.pointerId;
       drag = true;
-      setDragScrollLock(true);
       const p = canvasPoint(e.clientX, e.clientY);
       x0 = x1 = p.x;
       y0 = y1 = p.y;
@@ -523,7 +467,6 @@ async function main(): Promise<void> {
 
     drag = false;
     ptrId = null;
-    setDragScrollLock(false);
     layoutAndDraw();
   }
 
@@ -560,7 +503,6 @@ async function main(): Promise<void> {
         drag = false;
         ptrId = null;
         canvasTouchSequence = false;
-        setDragScrollLock(false);
         if (phase === 'playing') {
           stopTimer();
           phase = 'idle';

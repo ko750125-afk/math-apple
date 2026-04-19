@@ -21,29 +21,8 @@ html.game-playing body {
   overflow: hidden;
   overscroll-behavior: none;
   touch-action: none;
-}
-
-html.drag-active,
-html.drag-active body {
-  overflow: hidden;
-  overscroll-behavior: none;
-}
-
-body.drag-active {
-  position: fixed;
-  left: 0;
-  right: 0;
-  width: 100%;
   user-select: none;
   -webkit-user-select: none;
-  cursor: crosshair;
-}
-
-body.drag-active,
-body.drag-active * {
-  user-select: none !important;
-  -webkit-user-select: none !important;
-  -webkit-user-drag: none;
 }
 
 html.game-playing .audio-controls,
