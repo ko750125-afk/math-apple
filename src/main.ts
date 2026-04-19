@@ -126,6 +126,8 @@ async function main(): Promise<void> {
   const startBtn = document.querySelector<HTMLButtonElement>('#startBtn')!;
   const stopBtn = document.querySelector<HTMLButtonElement>('#stopBtn')!;
   const canvas = document.querySelector<HTMLCanvasElement>('#gameCanvas')!;
+  canvas.draggable = false;
+  const canvasWrap = canvas.parentElement as HTMLElement;
   const overlay = document.querySelector<HTMLDivElement>('#overlay')!;
   const overlayTitle = document.querySelector<HTMLHeadingElement>('#overlayTitle')!;
   const overlayMessage = document.querySelector<HTMLParagraphElement>('#overlayMessage')!;
@@ -265,6 +267,17 @@ async function main(): Promise<void> {
   canvas.addEventListener('touchstart', blockBoardTouchScroll, canvasPointerOpts);
   canvas.addEventListener('touchmove', blockBoardTouchScroll, canvasPointerOpts);
 
+  /** Desktop: trackpad/wheel scroll while pointer is over the board. */
+  document.addEventListener(
+    'wheel',
+    (e) => {
+      if (phase !== 'playing') return;
+      const t = e.target;
+      if (t instanceof Node && canvasWrap.contains(t)) e.preventDefault();
+    },
+    { passive: false, capture: true }
+  );
+
   function stopTimer(): void {
     if (timerId !== null) {
       clearInterval(timerId);
@@ -389,7 +402,11 @@ async function main(): Promise<void> {
       if (phase !== 'playing') return;
       void audio.resume();
       e.preventDefault();
-      canvas.setPointerCapture(e.pointerId);
+      try {
+        canvas.setPointerCapture(e.pointerId);
+      } catch {
+        /* ignore: rare environments block capture */
+      }
       ptrId = e.pointerId;
       drag = true;
       const p = canvasPoint(e.clientX, e.clientY);
@@ -400,7 +417,8 @@ async function main(): Promise<void> {
     canvasPointerOpts
   );
 
-  canvas.addEventListener(
+  /** Document: pointer may leave the canvas while dragging; capture is not always reliable. */
+  document.addEventListener(
     'pointermove',
     (e) => {
       if (!drag || ptrId !== e.pointerId) return;
@@ -416,7 +434,13 @@ async function main(): Promise<void> {
   function endPointer(e: PointerEvent): void {
     if (!drag || ptrId !== e.pointerId) return;
     e.preventDefault();
-    canvas.releasePointerCapture(e.pointerId);
+    try {
+      if (canvas.hasPointerCapture(e.pointerId)) {
+        canvas.releasePointerCapture(e.pointerId);
+      }
+    } catch {
+      /* ignore */
+    }
     const { w: cssW, h: cssH } = cssSize();
     const layout = renderer.getLayout(cssW, cssH, gridCols, gridRows);
     const sel = normalizeRect(x0, y0, x1, y1);
@@ -446,8 +470,8 @@ async function main(): Promise<void> {
     layoutAndDraw();
   }
 
-  canvas.addEventListener('pointerup', endPointer, canvasPointerOpts);
-  canvas.addEventListener('pointercancel', endPointer, canvasPointerOpts);
+  document.addEventListener('pointerup', endPointer, canvasPointerOpts);
+  document.addEventListener('pointercancel', endPointer, canvasPointerOpts);
 
   startBtn.addEventListener('click', () => {
     void audio.resume();
