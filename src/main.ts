@@ -240,15 +240,27 @@ async function main(): Promise<void> {
   canvas.addEventListener('touchstart', blockBoardTouchScroll, canvasPointerOpts);
   canvas.addEventListener('touchmove', blockBoardTouchScroll, canvasPointerOpts);
 
-  /** Desktop: trackpad/wheel scroll while pointer is over the board. */
+  /** Desktop: Chrome/trackpad can still emit wheel during drag, so block it globally. */
   document.addEventListener(
     'wheel',
     (e) => {
+      if (drag || canvasTouchSequence) {
+        e.preventDefault();
+        return;
+      }
       if (phase !== 'playing') return;
       const t = e.target;
       if (t instanceof Node && canvasWrap.contains(t)) e.preventDefault();
     },
     { passive: false, capture: true }
+  );
+
+  window.addEventListener(
+    'scroll',
+    () => {
+      if (drag) window.scrollTo(0, dragScrollLockY);
+    },
+    { passive: true }
   );
 
   document.addEventListener(
