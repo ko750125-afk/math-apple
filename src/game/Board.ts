@@ -1,11 +1,9 @@
-export const COLS = 17;
-export const ROWS = 10;
+/** Fixed board: 12 columns × 20 rows (가로 12, 세로 20). */
+export const COLS = 12;
+export const ROWS = 20;
 
-/** Use full board on typical phones; only trim on very narrow widths so cells stay usable. */
-export function pickGridSize(cssWidth: number): { cols: number; rows: number } {
-  if (cssWidth >= 360) return { cols: COLS, rows: ROWS };
-  if (cssWidth >= 320) return { cols: 15, rows: 9 };
-  return { cols: 13, rows: 8 };
+export function pickGridSize(_cssWidth: number): { cols: number; rows: number } {
+  return { cols: COLS, rows: ROWS };
 }
 
 export type Cell = { value: number } | null;

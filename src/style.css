@@ -391,11 +391,12 @@ html.game-playing .page-head {
 }
 
 .canvas-wrap {
-  flex: 1;
+  flex: 1 1 auto;
   display: flex;
   justify-content: center;
   align-items: stretch;
-  min-height: 420px;
+  /* 12×20 grid needs height; extra dvh keeps cells (apples) larger on phones. */
+  min-height: max(580px, min(72dvh, 900px));
   touch-action: none;
   -webkit-user-select: none;
   user-select: none;
@@ -404,8 +405,8 @@ html.game-playing .page-head {
 #gameCanvas {
   width: 100%;
   max-width: 100%;
-  height: auto;
-  min-height: 400px;
+  height: 100%;
+  min-height: max(560px, min(70dvh, 880px));
   border-radius: 20px;
   border: 5px solid #fff;
   box-shadow:

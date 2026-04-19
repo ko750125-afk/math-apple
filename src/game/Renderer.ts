@@ -133,7 +133,7 @@ export class Renderer {
   }
 
   getLayout(canvasCssW: number, canvasCssH: number, cols: number, rows: number): Layout {
-    const margin = 12;
+    const margin = 8;
     const innerW = canvasCssW - margin * 2;
     const innerH = canvasCssH - margin * 2;
     const cellSize = Math.floor(Math.min(innerW / cols, innerH / rows));
