@@ -10,17 +10,10 @@ export type Layout = {
 };
 
 export class Renderer {
-  private ctx: CanvasRenderingContext2D;
-  private apple: HTMLImageElement;
-
   constructor(
-    _canvas: HTMLCanvasElement,
-    ctx: CanvasRenderingContext2D,
-    appleImage: HTMLImageElement
-  ) {
-    this.ctx = ctx;
-    this.apple = appleImage;
-  }
+    private readonly ctx: CanvasRenderingContext2D,
+    private readonly apple: HTMLImageElement
+  ) {}
 
   clear(cssWidth: number, cssHeight: number): void {
     const { ctx } = this;

@@ -8,6 +8,9 @@ export function pickGridSize(cssWidth: number): { cols: number; rows: number } {
 
 export type Cell = { value: number } | null;
 
+/** Column/row index of a single board cell. */
+export type CellCoord = { c: number; r: number };
+
 export function createBoard(cols: number, rows: number): Cell[][] {
   let board: Cell[][];
   let sum: number;
@@ -51,7 +54,7 @@ export function isBoardClear(board: Cell[][]): boolean {
   return true;
 }
 
-export function removeCells(board: Cell[][], cells: { c: number; r: number }[]): void {
+export function removeCells(board: Cell[][], cells: CellCoord[]): void {
   for (const { c, r } of cells) {
     if (r >= 0 && r < board.length && c >= 0 && c < board[r]!.length) {
       board[r]![c] = null;

@@ -1,9 +1,15 @@
 import './style.css';
 import appleUrl from '../assets/apple-pixel.png';
 import { createBoard, isBoardClear, pickGridSize, removeCells, type Cell } from './game/Board';
-import { normalizeRect, rectsIntersect, cellRect, type Rect } from './game/geometry';
+import { normalizeRect } from './game/geometry';
 import { Renderer } from './game/Renderer';
+import {
+  getCellsInSelection,
+  scoreForMatchAppleCount,
+  sumSelected,
+} from './game/selection';
 import { GameAudio } from './game/Sound';
+import { T, timeUpGradeLine } from './i18n';
 
 const TIME_LIMIT_SEC = 120;
 const LS_AUDIO_VOL = 'mathApple_volume';
@@ -11,38 +17,6 @@ const LS_AUDIO_MUTE = 'mathApple_muted';
 
 /** Lets preventDefault() block page scroll while dragging on canvas (mobile). */
 const canvasPointerOpts: AddEventListenerOptions = { passive: false };
-
-const T = {
-  title: '\uC218\uD559\uB450\uB1CC\uD14C\uC2A4\uD2B8',
-  gameStart: '\uAC8C\uC784 \uC2DC\uC791',
-  gameStop: '\uAC8C\uC784 \uC911\uC9C0',
-  overlayCleared: '\uC804\uCCB4 \uD074\uB9AC\uC5B4',
-  msgCleared: (sec: number, score: number) =>
-    `\uBAA8\uB4E0 \uC0AC\uACFC\uB97C \uC81C\uAC70\uD588\uC2B5\uB2C8\uB2E4!\n\uCD1D\uC810 ${score}\uC810\n\uAC78\uB9B0 \uC2DC\uAC04: ${sec.toFixed(1)}\uCD08.`,
-  overlayOk: '\uD655\uC778',
-  ariaBoard: '\uAC8C\uC784 \uBCF4\uB4DC',
-  muteBtn: '\uC74C\uC18C\uAC70',
-  unmuteBtn: '\uC18C\uB9AC \uCF1C\uAE30',
-  volumeAria: '\uBCFC\uB968',
-} as const;
-
-/** Time-over copy by final score (high ??low). */
-function timeUpGradeLine(score: number): string {
-  if (score >= 100) return '\uC640\uC6B0! \uC218\uD559\uCC9C\uC7AC\uB124\uC694';
-  if (score >= 90)
-    return '\uC7A5\uB798\uD76C\uB9DD\uC744 \uC218\uD559\uC120\uC0DD\uB2D8\uC73C\uB85C \uC815\uD558\uC138\uC694. \uB2F9\uC7A5!!!';
-  if (score >= 80) return '\uC774\uC815\uB3C4\uBA74 \uBC18\uC5D0\uC11C 1\uB4F1\uAC10\uC774\uB124\uC694.';
-  if (score >= 70)
-    return '\uC640\uC6B0! 2\uD559\uB144\uC774 \uC774\uC815\uB3C4\uB77C\uB2C8... \uB180\uB78D\uAD70\uC694!';
-  if (score >= 60)
-    return '\uAFCD \uC798\uD558\uACE0 \uC788\uC2B5\uB2C8\uB2E4. \uBC25\uB9CC \uC798 \uBA39\uC73C\uBA74 \uCC38 \uC88B\uACA0\uB124\uC694.';
-  if (score >= 50) return '\uC81C\uBC95 \uC218\uD559\uC880 \uD55C\uB2E4\uB294 \uC18C\uB9AC \uB4E3\uACA0\uC5B4\uC694!';
-  if (score >= 40) return '\uC774\uC815\uB3C4\uBA74 \uC798\uD558\uB294 \uC218\uC900\uC774\uC5D0\uC694!';
-  if (score >= 30) return '\uC74C.... \uC9C0\uC6B0\uC57C \uC815\uC2E0\uCC28\uB9AC\uC790!!';
-  if (score >= 20) return '\uC9C0\uC6B0\uC57C... \uACE0\uC9C0\uC6B0!!!! \uC9D1\uC911\uD574! \uC9D1\uC911!!';
-  if (score >= 10) return '\uACE0\uC9C0\uC6B0!! \uC624\uB298\uBD80\uB85C \uC720\uD29C\uBE0C\uC2DC\uCCAD\uC740 \uAE08\uC9C0\uB2E4!!!';
-  return '\uCC98\uC74C\uC740 \uB2E4 \uADF8\uB798.. \uB2E4\uC2DC\uD55C\uBC88 \uB3C4\uC804\uD574\uBCF4\uC790!';
-}
 
 type Phase = 'idle' | 'playing' | 'over' | 'cleared';
 
@@ -53,42 +27,6 @@ function loadImage(src: string): Promise<HTMLImageElement> {
     img.onerror = () => reject(new Error(`Failed to load image: ${src}`));
     img.src = src;
   });
-}
-
-function getCellsInSelection(
-  board: Cell[][],
-  selection: Rect,
-  layout: { originX: number; originY: number; cellSize: number; cols: number; rows: number }
-): { c: number; r: number }[] {
-  const out: { c: number; r: number }[] = [];
-  for (let r = 0; r < layout.rows; r++) {
-    for (let c = 0; c < layout.cols; c++) {
-      if (!board[r]![c]) continue;
-      const cr = cellRect(c, r, layout.originX, layout.originY, layout.cellSize);
-      if (rectsIntersect(selection, cr)) {
-        out.push({ c, r });
-      }
-    }
-  }
-  return out;
-}
-
-function sumSelected(board: Cell[][], cells: { c: number; r: number }[]): number {
-  let s = 0;
-  for (const { c, r } of cells) {
-    const cell = board[r]![c];
-    if (cell) s += cell.value;
-  }
-  return s;
-}
-
-/** Sum is 10: points by number of apples in the match. */
-function scoreForMatchAppleCount(count: number): number {
-  if (count === 2) return 5;
-  if (count === 3) return 10;
-  if (count === 4) return 20;
-  if (count >= 5) return 50;
-  return 0;
 }
 
 async function main(): Promise<void> {
@@ -114,13 +52,12 @@ async function main(): Promise<void> {
   if (!ctxRaw) throw new Error('2D context not available');
   const ctx: CanvasRenderingContext2D = ctxRaw;
 
-  const renderer = new Renderer(canvas, ctx, apple);
+  const renderer = new Renderer(ctx, apple);
   const audio = new GameAudio();
   void audio.resume();
   window.addEventListener('pointerdown', () => void audio.resume(), { capture: true });
 
-  const audioWrap = document.querySelector<HTMLElement>('.audio-controls');
-  audioWrap?.setAttribute('aria-label', T.volumeAria);
+  document.querySelector<HTMLElement>('.audio-controls')?.setAttribute('aria-label', T.volumeAria);
 
   function syncMuteButton(): void {
     const m = audio.getMuted();
@@ -139,10 +76,7 @@ async function main(): Promise<void> {
     } else {
       audio.setVolume(Number(volumeSlider.value) / 100);
     }
-    const m = localStorage.getItem(LS_AUDIO_MUTE);
-    if (m === '1') {
-      audio.setMuted(true);
-    }
+    if (localStorage.getItem(LS_AUDIO_MUTE) === '1') audio.setMuted(true);
     syncMuteButton();
   }
 
@@ -191,14 +125,16 @@ async function main(): Promise<void> {
       target instanceof Element &&
       Boolean(
         target.closest(
-          'button, input, select, textarea, a, summary, details, .audio-controls, .play-controls, .settings-panel'
+          'button, input, select, textarea, a, summary, details, .audio-controls, .settings-panel'
         )
       )
     );
   }
 
   function touchTargetIsOverlay(target: EventTarget | null): boolean {
-    return target instanceof Element && !overlay.classList.contains('hidden') && overlay.contains(target);
+    return (
+      target instanceof Element && !overlay.classList.contains('hidden') && overlay.contains(target)
+    );
   }
 
   /** Block page scroll during board drags; allow HUD sliders/buttons. */
@@ -273,13 +209,6 @@ async function main(): Promise<void> {
     }
   }
 
-  function syncPlayButtons(): void {
-    const playing = phase === 'playing';
-    document.documentElement.classList.toggle('game-playing', playing);
-    document.body.classList.toggle('game-playing', playing);
-    if (!playing) canvasTouchSequence = false;
-  }
-
   function startTimer(): void {
     stopTimer();
     timerId = setInterval(() => {
@@ -290,10 +219,10 @@ async function main(): Promise<void> {
         timeLeft = 0;
         phase = 'over';
         stopTimer();
-        syncPlayButtons();
+        canvasTouchSequence = false;
         audio.playTimeUp();
         overlayTitle.textContent = '';
-        overlayMessage.textContent = `\uCD1D\uC810 ${score}\uC810\n\n${timeUpGradeLine(score)}`;
+        overlayMessage.textContent = T.msgTimeUp(score, timeUpGradeLine(score));
         overlay.classList.remove('hidden');
       } else {
         audio.playTick();
@@ -323,7 +252,6 @@ async function main(): Promise<void> {
     overlay.classList.add('hidden');
     updateHud();
     audio.resetTickMelody();
-    syncPlayButtons();
     layoutAndDraw();
   }
 
@@ -333,7 +261,6 @@ async function main(): Promise<void> {
     phase = 'playing';
     gameStartedAt = performance.now();
     overlay.classList.add('hidden');
-    syncPlayButtons();
     audio.resetTickMelody();
     startTimer();
     layoutAndDraw();
@@ -418,9 +345,7 @@ async function main(): Promise<void> {
     if (!drag || ptrId !== e.pointerId) return;
     e.preventDefault();
     try {
-      if (canvas.hasPointerCapture(e.pointerId)) {
-        canvas.releasePointerCapture(e.pointerId);
-      }
+      if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
     } catch {
       /* ignore */
     }
@@ -438,7 +363,7 @@ async function main(): Promise<void> {
       if (isBoardClear(board)) {
         phase = 'cleared';
         stopTimer();
-        syncPlayButtons();
+        canvasTouchSequence = false;
         const elapsedSec = (performance.now() - gameStartedAt) / 1000;
         overlayTitle.textContent = T.overlayCleared;
         overlayMessage.textContent = T.msgCleared(elapsedSec, score);
@@ -481,7 +406,6 @@ async function main(): Promise<void> {
           stopTimer();
           phase = 'idle';
         }
-        syncPlayButtons();
       }
       layoutAndDraw();
     }, 150);
