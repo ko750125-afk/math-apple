@@ -17,8 +17,8 @@ const T = {
   gameStart: '\uAC8C\uC784 \uC2DC\uC791',
   gameStop: '\uAC8C\uC784 \uC911\uC9C0',
   overlayCleared: '\uC804\uCCB4 \uD074\uB9AC\uC5B4',
-  msgCleared: (sec: number) =>
-    `\uBAA8\uB4E0 \uC0AC\uACFC\uB97C \uC81C\uAC70\uD588\uC2B5\uB2C8\uB2E4! \uAC78\uB9B0 \uC2DC\uAC04: ${sec.toFixed(1)}\uCD08.`,
+  msgCleared: (sec: number, score: number) =>
+    `\uBAA8\uB4E0 \uC0AC\uACFC\uB97C \uC81C\uAC70\uD588\uC2B5\uB2C8\uB2E4!\n\uCD1D\uC810 ${score}\uC810\n\uAC78\uB9B0 \uC2DC\uAC04: ${sec.toFixed(1)}\uCD08.`,
   overlayOk: '\uD655\uC778',
   ariaBoard: '\uAC8C\uC784 \uBCF4\uB4DC',
   muteBtn: '\uC74C\uC18C\uAC70',
@@ -307,7 +307,7 @@ async function main(): Promise<void> {
         syncPlayButtons();
         audio.playTimeUp();
         overlayTitle.textContent = '';
-        overlayMessage.textContent = timeUpGradeLine(score);
+        overlayMessage.textContent = `\uCD1D\uC810 ${score}\uC810\n\n${timeUpGradeLine(score)}`;
         overlay.classList.remove('hidden');
       } else {
         audio.playTick();
@@ -458,7 +458,7 @@ async function main(): Promise<void> {
         syncPlayButtons();
         const elapsedSec = (performance.now() - gameStartedAt) / 1000;
         overlayTitle.textContent = T.overlayCleared;
-        overlayMessage.textContent = T.msgCleared(elapsedSec);
+        overlayMessage.textContent = T.msgCleared(elapsedSec, score);
         overlay.classList.remove('hidden');
       }
     } else if (phase === 'playing' && picked.length > 0 && sum !== 10) {
