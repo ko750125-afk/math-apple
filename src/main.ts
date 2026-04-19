@@ -264,6 +264,27 @@ async function main(): Promise<void> {
   );
 
   document.addEventListener(
+    'mousemove',
+    (e) => {
+      if (!drag) return;
+      e.preventDefault();
+      window.scrollTo(0, dragScrollLockY);
+      document.getSelection()?.removeAllRanges();
+    },
+    { capture: true }
+  );
+
+  document.addEventListener(
+    'mouseup',
+    () => {
+      if (!drag) return;
+      window.scrollTo(0, dragScrollLockY);
+      document.getSelection()?.removeAllRanges();
+    },
+    { capture: true }
+  );
+
+  document.addEventListener(
     'selectstart',
     (e) => {
       if (drag) e.preventDefault();
@@ -273,6 +294,14 @@ async function main(): Promise<void> {
 
   document.addEventListener(
     'dragstart',
+    (e) => {
+      if (drag) e.preventDefault();
+    },
+    { capture: true }
+  );
+
+  document.addEventListener(
+    'contextmenu',
     (e) => {
       if (drag) e.preventDefault();
     },
@@ -434,6 +463,14 @@ async function main(): Promise<void> {
       layoutAndDraw();
     },
     canvasPointerOpts
+  );
+
+  canvas.addEventListener(
+    'mousedown',
+    (e) => {
+      if (phase === 'playing') e.preventDefault();
+    },
+    { capture: true }
   );
 
   /** Document: pointer may leave the canvas while dragging; capture is not always reliable. */

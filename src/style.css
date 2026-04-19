@@ -39,6 +39,13 @@ body.drag-active {
   cursor: crosshair;
 }
 
+body.drag-active,
+body.drag-active * {
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -webkit-user-drag: none;
+}
+
 html.game-playing .audio-controls,
 html.game-playing .play-controls,
 html.game-playing .how-to-wrap,
@@ -456,6 +463,9 @@ html.game-playing .page-head {
     0 16px 40px rgba(0, 0, 0, 0.25);
   touch-action: none;
   -webkit-touch-callout: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
   display: block;
   background: #1a1f2e;
 }
