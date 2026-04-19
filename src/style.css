@@ -455,21 +455,29 @@ html {
   }
 
   .header {
-    align-items: stretch;
+    flex-wrap: nowrap;
+    align-items: center;
     gap: 8px;
   }
 
   .hud {
-    gap: 10px;
+    flex: 1 1 auto;
+    min-width: 0;
+    gap: 8px;
   }
 
   .hud-chip {
-    padding: 7px 10px 7px 9px;
+    padding: 6px 10px 6px 9px;
   }
 
   .controls {
-    width: 100%;
+    flex: 0 0 auto;
     justify-content: flex-end;
+  }
+
+  .settings-summary {
+    padding: 8px 12px;
+    font-size: 0.95rem;
   }
 
   .settings-body {
