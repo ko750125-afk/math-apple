@@ -395,7 +395,7 @@ html.game-playing .page-head {
   display: flex;
   justify-content: center;
   align-items: stretch;
-  /* 12×20 grid needs height; extra dvh keeps cells (apples) larger on phones. */
+  /* Tall grid on phones needs vertical space; dvh helps keep apples readable. */
   min-height: max(580px, min(72dvh, 900px));
   touch-action: none;
   -webkit-user-select: none;

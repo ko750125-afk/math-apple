@@ -1,9 +1,9 @@
-/** Fixed board: 12 columns × 20 rows (가로 12, 세로 20). */
-export const COLS = 12;
-export const ROWS = 20;
+/** \uBAA8\uBC14\uC77C(css768px \uBBF8\uB9CC): 10\u00D715. \uB370\uC2A4\uD06C\uD1B1: 15\u00D710. */
+const LAYOUT_BREAKPOINT_CSS_PX = 768;
 
-export function pickGridSize(_cssWidth: number): { cols: number; rows: number } {
-  return { cols: COLS, rows: ROWS };
+export function pickGridSize(cssWidth: number): { cols: number; rows: number } {
+  if (cssWidth < LAYOUT_BREAKPOINT_CSS_PX) return { cols: 10, rows: 15 };
+  return { cols: 15, rows: 10 };
 }
 
 export type Cell = { value: number } | null;
