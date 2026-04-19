@@ -46,33 +46,6 @@ function timeUpGradeLine(score: number): string {
 
 type Phase = 'idle' | 'playing' | 'over' | 'cleared';
 
-/** Touch / coarse pointer: no hover ??tap "게임방법" to toggle tooltip. */
-function setupTouchHowTo(): void {
-  const wrap = document.querySelector<HTMLElement>('.how-to-wrap');
-  const trigger = document.querySelector<HTMLElement>('.how-to-trigger');
-  if (!wrap || !trigger) return;
-  if (!window.matchMedia('(hover: none), (pointer: coarse)').matches) return;
-
-  trigger.setAttribute('role', 'button');
-  trigger.setAttribute('aria-expanded', 'false');
-
-  trigger.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const open = wrap.classList.toggle('is-open');
-    trigger.setAttribute('aria-expanded', String(open));
-  });
-
-  document.addEventListener(
-    'click',
-    (e) => {
-      if (wrap.contains(e.target as Node)) return;
-      wrap.classList.remove('is-open');
-      trigger.setAttribute('aria-expanded', 'false');
-    },
-    true
-  );
-}
-
 function loadImage(src: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -139,7 +112,6 @@ async function main(): Promise<void> {
   stopBtn.textContent = T.gameStop;
   overlayClose.textContent = T.overlayOk;
   canvas.setAttribute('aria-label', T.ariaBoard);
-  setupTouchHowTo();
 
   const apple = await loadImage(appleUrl);
   const ctxRaw = canvas.getContext('2d');
@@ -224,7 +196,7 @@ async function main(): Promise<void> {
       target instanceof Element &&
       Boolean(
         target.closest(
-          'button, input, select, textarea, a, .audio-controls, .play-controls, .how-to-wrap'
+          'button, input, select, textarea, a, summary, details, .audio-controls, .play-controls, .settings-panel'
         )
       )
     );

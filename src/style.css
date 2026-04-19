@@ -87,15 +87,17 @@ html.game-playing .page-head {
   max-width: 36ch;
 }
 
-.how-to-wrap {
+.settings-panel {
   position: relative;
-  display: inline-block;
 }
 
-.how-to-trigger {
-  cursor: help;
-  display: inline-block;
-  padding: 6px 14px;
+.settings-summary {
+  list-style: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 16px;
   font-size: 1.05rem;
   font-weight: 400;
   color: #5d1a7a;
@@ -106,27 +108,38 @@ html.game-playing .page-head {
     0 3px 0 #e65100,
     0 6px 14px rgba(0, 0, 0, 0.2);
   text-decoration: none;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
-.how-to-trigger:hover {
+.settings-summary::-webkit-details-marker {
+  display: none;
+}
+
+.settings-summary:hover {
   transform: translateY(-1px);
   filter: brightness(1.05);
 }
 
-.how-to-trigger:focus-visible {
+.settings-summary:focus-visible {
   outline: 3px solid #fff;
   outline-offset: 3px;
 }
 
-.how-to-tooltip {
-  display: none;
+.settings-panel[open] .settings-summary {
+  border-color: #7b1fa2;
+  box-shadow:
+    0 3px 0 #4a148c,
+    0 6px 16px rgba(74, 20, 140, 0.24);
+}
+
+.settings-body {
   position: absolute;
-  left: 0;
   top: calc(100% + 10px);
+  right: 0;
   z-index: 30;
-  min-width: min(320px, calc(100vw - 48px));
-  max-width: 400px;
-  padding: 16px 18px;
+  width: min(380px, calc(100vw - 32px));
+  padding: 16px;
   background: linear-gradient(180deg, #ffffff 0%, #e3f2fd 100%);
   border: 4px solid #7e57c2;
   border-radius: 16px;
@@ -138,7 +151,20 @@ html.game-playing .page-head {
   color: #4a148c;
 }
 
-.how-to-tooltip p {
+.settings-section + .settings-section {
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 2px dashed rgba(126, 87, 194, 0.45);
+}
+
+.settings-title {
+  margin: 0 0 10px;
+  font-size: 1.05rem;
+  font-weight: 400;
+  color: #5d1a7a;
+}
+
+.how-to-panel p {
   margin: 0 0 12px;
   font-size: 1.05rem;
   font-weight: 400;
@@ -162,11 +188,6 @@ html.game-playing .page-head {
 
 .how-to-rules li:last-child {
   margin-bottom: 0;
-}
-
-.how-to-wrap:hover .how-to-tooltip,
-.how-to-wrap:focus-within .how-to-tooltip {
-  display: block;
 }
 
 .header {
@@ -257,6 +278,7 @@ html.game-playing .page-head {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
   gap: 12px;
 }
 
@@ -313,11 +335,13 @@ html.game-playing .page-head {
 .audio-controls {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 10px;
+  width: 100%;
   padding: 6px 12px;
   background: rgba(255, 255, 255, 0.55);
   border: 3px solid #7e57c2;
-  border-radius: 999px;
+  border-radius: 16px;
   box-shadow: 0 2px 0 #4527a0;
 }
 
@@ -348,7 +372,9 @@ html.game-playing .page-head {
 }
 
 .volume-slider {
-  width: min(120px, 28vw);
+  flex: 1 1 auto;
+  width: auto;
+  min-width: 120px;
   height: 8px;
   accent-color: #7e57c2;
   cursor: pointer;
@@ -486,17 +512,47 @@ html.game-playing .page-head {
   white-space: pre-line;
 }
 
-/* Phones/tablets: no hover — tap toggles .is-open (see main.ts). */
+@media (max-width: 767px) {
+  .page-head {
+    margin-bottom: 10px;
+  }
+
+  .app-tagline {
+    margin-bottom: 8px;
+    font-size: 0.98rem;
+  }
+
+  .header {
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .hud {
+    gap: 10px;
+  }
+
+  .hud-chip {
+    padding: 8px 12px 8px 10px;
+  }
+
+  .controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .play-controls {
+    gap: 8px;
+  }
+
+  .settings-body {
+    right: 0;
+    left: auto;
+    width: min(360px, calc(100vw - 32px));
+  }
+}
+
 @media (hover: none), (pointer: coarse) {
-  .how-to-wrap:hover .how-to-tooltip {
-    display: none;
-  }
-
-  .how-to-wrap.is-open .how-to-tooltip {
-    display: block;
-  }
-
-  .how-to-trigger {
+  .settings-summary {
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
