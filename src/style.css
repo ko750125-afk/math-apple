@@ -20,21 +20,11 @@ html {
   scrollbar-gutter: stable;
 }
 
-/* Strong scroll lock while a round is active (mobile drag vs browser pan). */
-html.game-playing,
+/* Canvas already blocks its own gestures; don't toggle html-level overflow
+   because that would swap scrollbar space and subtly resize the canvas. */
 html.game-playing body {
-  overflow: hidden;
-  overscroll-behavior: none;
-  touch-action: none;
   user-select: none;
   -webkit-user-select: none;
-}
-
-html.game-playing .audio-controls,
-html.game-playing .play-controls,
-html.game-playing .how-to-wrap,
-html.game-playing .page-head {
-  touch-action: manipulation;
 }
 
 .app {
